@@ -1,0 +1,110 @@
+#include <stdio.h>   // Biblioteca para entrada e saída
+#include <string.h>  // Biblioteca para manipulação de strings
+#include <ctype.h>   // Biblioteca para manipulação de caracteres (toupper, tolower, etc.)
+
+#define JOGADORES 5         // Número de jogadores
+#define PONTOS_VITORIA 10   // Pontos para vitória
+#define PONTOS_EMPATE 5     // Pontos para empate
+#define PONTOS_DERROTA 1    // Pontos para derrota
+
+// Estrutura que representa um jogador
+struct Jogador {
+    char nome[30];   // Nome do jogador
+    int pontos;      // Pontuação total do jogador
+};
+
+// Função para cadastrar os jogadores
+void cadastrarJogadores(struct Jogador jogadores[], int n) {
+    for (int i = 0; i < n; i++) {
+        printf("Digite o nome do jogador %d: ", i + 1);
+        fgets(jogadores[i].nome, sizeof(jogadores[i].nome), stdin); // Lê o nome
+        jogadores[i].nome[strcspn(jogadores[i].nome, "\n")] = '\0'; // Remove '\n'
+        jogadores[i].pontos = 0; // Inicializa a pontuação como 0
+    }
+}
+
+// Função para ler os resultados das partidas
+void lerResultados(char resultados[][JOGADORES], struct Jogador jogadores[], int n) {
+    char res = '\0';
+    printf("\nDigite o resultado das partidas (V=Vitória, E=Empate, D=Derrota):\n");
+
+    for (int i = 0; i < n; i++) {         // Para cada jogador
+        for (int j = i + 1; j < n; j++) { // Para cada adversário (apenas um lado da matriz)
+
+            int valido = 0;               // Flag para validar entrada
+            while (!valido) {             // Loop até digitar V, E ou D
+                printf("Partida %s vs %s: ", jogadores[i].nome, jogadores[j].nome);
+                scanf(" %c", &res);       // Lê um caractere (com espaço para ignorar '\n')
+                res = toupper(res);       // Converte para maiúscula
+                if (res == 'V' || res == 'E' || res == 'D') {
+                    valido = 1;           // Entrada válida
+                }
+            }
+
+            resultados[i][j] = res;      // Armazena o resultado
+            // Preenche o resultado do adversário automaticamente
+            if (res == 'V') {
+                resultados[j][i] = 'D';
+            } else if (res == 'D') {
+                resultados[j][i] = 'V';
+            } else {
+                resultados[j][i] = 'E';
+            }
+        }
+    }
+}
+
+// Função para calcular os pontos de cada jogador
+void calcularPontos(char resultados[][JOGADORES], struct Jogador jogadores[], int n) {
+    for (int i = 0; i < n; i++) {
+        jogadores[i].pontos = 0;         // Reinicia pontuação antes de calcular
+        for (int j = 0; j < n; j++) {    // Para cada adversário
+            if (i != j) {                // Ignora confronto consigo mesmo
+                if (resultados[i][j] == 'V') {
+                    jogadores[i].pontos += PONTOS_VITORIA;
+                } else if (resultados[i][j] == 'E') {
+                    jogadores[i].pontos += PONTOS_EMPATE;
+                } else if (resultados[i][j] == 'D') {
+                    jogadores[i].pontos += PONTOS_DERROTA;
+                }
+            }
+        }
+    }
+}
+
+// Função para mostrar a pontuação final
+void mostrarPontuacao(struct Jogador jogadores[], int n) {
+    printf("\nPontuação final:\n");
+    for (int i = 0; i < n; i++) {
+        printf("%-30s: %3d pontos\n", jogadores[i].nome, jogadores[i].pontos);
+        // %-30s = alinha o nome à esquerda ocupando 30 caracteres
+        // %3d = imprime a pontuação com 3 dígitos de largura
+    }
+}
+
+// Função para encontrar o jogador com mais pontos
+int encontrarVencedor(struct Jogador jogadores[], int n) {
+    int vencedor = 0;             // Começa assumindo que o primeiro é o vencedor
+    for (int i = 1; i < n; i++) { // Percorre os outros jogadores
+        if (jogadores[i].pontos > jogadores[vencedor].pontos) {
+            vencedor = i;          // Atualiza o vencedor se achar alguém com mais pontos
+        }
+    }
+    return vencedor;               // Retorna o índice do vencedor
+}
+
+// Função principal
+int main() {
+    struct Jogador jogadores[JOGADORES];     // Array de jogadores
+    char resultados[JOGADORES][JOGADORES];   // Matriz de resultados
+
+    cadastrarJogadores(jogadores, JOGADORES); // Cadastra jogadores
+    lerResultados(resultados, jogadores, JOGADORES); // Lê resultados
+    calcularPontos(resultados, jogadores, JOGADORES); // Calcula pontos
+    mostrarPontuacao(jogadores, JOGADORES);   // Mostra pontuação
+
+    int vencedor = encontrarVencedor(jogadores, JOGADORES); // Encontra vencedor
+    printf("\n%s venceu com %d pontos!\n", jogadores[vencedor].nome, jogadores[vencedor].pontos);
+
+    return 0;
+}
