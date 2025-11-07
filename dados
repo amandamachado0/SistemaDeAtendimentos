@@ -1,0 +1,199 @@
+#include <stdio.h>
+#include <string.h>
+
+#define VENDEDORES 20
+#define CLIENTES 1000
+#define ATENDIMENTOS 20000  // máximo de atendimentos que podemos registrar
+
+// Struct para guardar os vendedores
+typedef struct {
+    char nome[50];
+} Vendedor;
+
+// Struct para guardar os clientes
+typedef struct {
+    char nome[50];
+} Cliente;
+
+// Struct para guardar cada atendimento
+typedef struct {
+    char vendedor[50];
+    char cliente[50];
+    int dia, mes, ano;
+    float nota;
+} Atendimento;
+
+// Arrays pra guardar os dados
+Vendedor vendedores[VENDEDORES];
+Cliente clientes[CLIENTES];
+Atendimento atendimentos[ATENDIMENTOS];
+
+// Contadores de quantos já cadastramos
+int numVendedores = 0;
+int numClientes = 0;
+int numAtendimentos = 0;
+
+// Função pra achar vendedor pelo nome
+int buscarVendedor(char nome[]) {
+    for (int i = 0; i < numVendedores; i++)
+        if (strcmp(vendedores[i].nome, nome) == 0)
+            return i; // achou, retorna a posição
+    return -1; // não achou
+}
+
+// Função pra achar cliente pelo nome
+int buscarCliente(char nome[]) {
+    for (int i = 0; i < numClientes; i++)
+        if (strcmp(clientes[i].nome, nome) == 0)
+            return i;
+    return -1; // não achou
+}
+
+// Função pra cadastrar vendedor
+void cadastrarVendedor() {
+    if (numVendedores >= VENDEDORES) {
+        printf("Limite de vendedores atingido!\n");
+        return;
+    }
+
+    char nome[50];
+    printf("Digite o nome do vendedor: ");
+    fgets(nome, sizeof(nome), stdin);
+    nome[strcspn(nome, "\n")] = 0; // tira o enter do final
+
+    if (strlen(nome) == 0) { 
+        printf("Nome vazio! Cancelando cadastro.\n");
+        return;
+    }
+
+    strcpy(vendedores[numVendedores].nome, nome);
+    numVendedores++;
+    printf("Vendedor cadastrado!\n");
+}
+
+// Função pra cadastrar cliente
+void cadastrarCliente() {
+    if (numClientes >= CLIENTES) {
+        printf("Limite de clientes atingido!\n");
+        return;
+    }
+
+    char nome[50];
+    printf("Digite o nome do cliente: ");
+    fgets(nome, sizeof(nome), stdin);
+    nome[strcspn(nome, "\n")] = 0; // tira o enter do final
+
+    if (strlen(nome) == 0) {
+        printf("Nome vazio! Cancelando cadastro.\n");
+        return;
+    }
+
+    strcpy(clientes[numClientes].nome, nome);
+    numClientes++;
+    printf("Cliente cadastrado!\n");
+}
+
+// Função pra registrar atendimento
+void registrarAtendimento() {
+    if (numAtendimentos >= ATENDIMENTOS) {
+        printf("Limite de atendimentos atingido!\n");
+        return;
+    }
+
+    char nomeVendedor[50], nomeCliente[50];
+
+    printf("Nome do vendedor: ");
+    fgets(nomeVendedor, sizeof(nomeVendedor), stdin);
+    nomeVendedor[strcspn(nomeVendedor, "\n")] = 0;
+
+    if (buscarVendedor(nomeVendedor) == -1) {
+        printf("Vendedor não encontrado!\n");
+        return;
+    }
+
+    printf("Nome do cliente: ");
+    fgets(nomeCliente, sizeof(nomeCliente), stdin);
+    nomeCliente[strcspn(nomeCliente, "\n")] = 0;
+
+    if (buscarCliente(nomeCliente) == -1) {
+        printf("Cliente não encontrado!\n");
+        return;
+    }
+
+    int dia, mes, ano;
+    float nota;
+
+    printf("Dia do atendimento: "); scanf("%d", &dia);
+    printf("Mês: "); scanf("%d", &mes);
+    printf("Ano: "); scanf("%d", &ano);
+    printf("Nota (0 a 10): "); scanf("%f", &nota);
+    while(getchar() != '\n'); // limpar buffer do enter
+
+    if (nota < 0 || nota > 10) {
+        printf("Nota inválida!\n");
+        return;
+    }
+
+    // guardar atendimento no array
+    Atendimento a;
+    strcpy(a.vendedor, nomeVendedor);
+    strcpy(a.cliente, nomeCliente);
+    a.dia = dia; a.mes = mes; a.ano = ano;
+    a.nota = nota;
+
+    atendimentos[numAtendimentos++] = a; // salva e já incrementa
+    printf("Atendimento registrado!\n");
+}
+
+// Função pra gerar relatório
+void gerarRelatorio() {
+    for (int i = 0; i < numVendedores; i++) {
+        char *nomeVendedor = vendedores[i].nome;
+        float somaNotas = 0;
+        int qtd = 0;
+
+        printf("\nRelatório do vendedor: %s\n", nomeVendedor);
+
+        for (int j = 0; j < numAtendimentos; j++) {
+            Atendimento a = atendimentos[j];
+            if (strcmp(a.vendedor, nomeVendedor) == 0) {
+                printf("Cliente: %s / Data: %02d/%02d/%04d / Nota: %.1f\n",
+                       a.cliente, a.dia, a.mes, a.ano, a.nota);
+                somaNotas += a.nota;
+                qtd++;
+            }
+        }
+
+        if (qtd > 0)
+            printf("Média das notas: %.1f\n", somaNotas / qtd);
+        else
+            printf("Nenhum atendimento registrado.\n");
+    }
+}
+
+// Menu principal
+int main() {
+    int opcao;
+
+    do {
+        printf("\n=== MENU ===\n");
+        printf("1. Cadastrar vendedor\n");
+        printf("2. Cadastrar cliente\n");
+        printf("3. Registrar atendimento\n");
+        printf("4. Mostrar relatório\n");
+        printf("0. Sair\n");
+        printf("Escolha: ");
+        scanf("%d", &opcao);
+        while(getchar() != '\n'); // limpar buffer do enter
+
+        if (opcao == 1) cadastrarVendedor();
+        else if (opcao == 2) cadastrarCliente();
+        else if (opcao == 3) registrarAtendimento();
+        else if (opcao == 4) gerarRelatorio();
+        else if (opcao == 0) printf("Saindo...\n");
+        else printf("Opção inválida!\n");
+
+    } while (opcao != 0);
+
+    return 0;
+}
