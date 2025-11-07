@@ -1,0 +1,147 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+// Definindo limites máximos
+#define MAX_MUSICAS 1000    // Máximo de músicas que podem ser cadastradas
+#define MAX_HORARIOS 24     // Horários do dia (0-23)
+
+// Estrutura para guardar informações de uma música
+typedef struct {
+    char nome[100];       // Nome da música
+    char artista[50];     // Nome do artista
+} Musica;
+
+// Estrutura para guardar qual música vai tocar em qual horário
+typedef struct {
+    Musica musica;       // Música cadastrada
+    int horario;         // Horário (0-23)
+} Agenda;
+
+// Arrays globais
+Musica musicas[MAX_MUSICAS];  // Array que armazena todas as músicas
+Agenda agenda[MAX_HORARIOS];  // Array que armazena a agenda do dia
+int totalMusicas = 0;         // Contador de músicas cadastradas
+int totalAgenda = 0;          // Contador de horários usados na agenda
+
+// Função para cadastrar músicas
+void cadastrarMusicas() {
+    // Verifica se atingiu o limite
+    if (totalMusicas >= MAX_MUSICAS) {
+        printf("Limite de músicas atingido!\n");
+        return;
+    }
+
+    printf("Cadastro de Música %d\n", totalMusicas + 1);
+
+    // Limpa o buffer antes de usar fgets
+    getchar();
+
+    // Lê o nome da música
+    printf("Nome da música: ");
+    fgets(musicas[totalMusicas].nome, sizeof(musicas[totalMusicas].nome), stdin);
+    // Remove o '\n' que o fgets coloca
+    musicas[totalMusicas].nome[strcspn(musicas[totalMusicas].nome, "\n")] = '\0';
+
+    // Lê o nome do artista
+    printf("Nome do artista: ");
+    fgets(musicas[totalMusicas].artista, sizeof(musicas[totalMusicas].artista), stdin);
+    musicas[totalMusicas].artista[strcspn(musicas[totalMusicas].artista, "\n")] = '\0';
+
+    // Incrementa contador de músicas cadastradas
+    totalMusicas++;
+
+    printf("Música cadastrada com sucesso!\n\n");
+}
+
+// Função para definir o horário de cada música
+void definirHorario() {
+    // Verifica se já existem músicas cadastradas
+    if (totalMusicas == 0) {
+        printf("Nenhuma música cadastrada ainda.\n");
+        return;
+    }
+
+    int escolhaMusica, horario;
+
+    // Mostra todas as músicas cadastradas para escolher
+    printf("Escolha a música pelo número (1 a %d):\n", totalMusicas);
+    for (int i = 0; i < totalMusicas; i++) {
+        printf("%d. %s - %s\n", i + 1, musicas[i].nome, musicas[i].artista);
+    }
+
+    // Lê a música escolhida
+    scanf("%d", &escolhaMusica);
+
+    // Valida escolha
+    if (escolhaMusica < 1 || escolhaMusica > totalMusicas) {
+        printf("Música inválida!\n");
+        return;
+    }
+
+    // Lê o horário em que a música vai tocar
+    printf("Escolha o horário (0-23): ");
+    scanf("%d", &horario);
+
+    // Valida horário
+    if (horario < 0 || horario >= MAX_HORARIOS) {
+        printf("Horário inválido!\n");
+        return;
+    }
+
+    // Atribui a música ao horário escolhido
+    agenda[horario].musica = musicas[escolhaMusica - 1];
+    agenda[horario].horario = horario;
+
+    // Atualiza total de horários usados
+    if (horario >= totalAgenda) totalAgenda = horario + 1;
+
+    printf("Música %s agendada para as %d horas.\n", musicas[escolhaMusica - 1].nome, horario);
+}
+
+// Função para mostrar toda a agenda do dia
+void mostrarAgenda() {
+    printf("\nAgenda do Restaurante:\n");
+
+    // Percorre todos os horários cadastrados
+    for (int i = 0; i < totalAgenda; i++) {
+        // Verifica se existe música no horário
+        if (agenda[i].horario == i) {
+            printf("%02d:00 - %s - %s\n", i, agenda[i].musica.nome, agenda[i].musica.artista);
+        } else {
+            printf("%02d:00 - Nenhuma música agendada\n", i);
+        }
+    }
+    printf("\n");
+}
+
+// Função principal
+int main() {
+    int opcao;
+
+    // Loop principal do menu
+    do {
+        printf("1. Cadastrar música\n");
+        printf("2. Definir horário de música\n");
+        printf("3. Mostrar agenda\n");
+        printf("0. Sair\n");
+        printf("Escolha uma opção: ");
+        scanf("%d", &opcao);
+
+        // Substituindo switch por if / else if / else
+        if (opcao == 1) {
+            cadastrarMusicas();  // Chama função para cadastrar música
+        } else if (opcao == 2) {
+            definirHorario();    // Chama função para definir horário
+        } else if (opcao == 3) {
+            mostrarAgenda();     // Chama função para mostrar agenda
+        } else if (opcao == 0) {
+            printf("Saindo...\n"); // Opção de sair
+        } else {
+            printf("Opção inválida!\n"); // Caso digite número inválido
+        }
+
+    } while (opcao != 0); // Continua enquanto não escolher sair
+
+    return 0;
+}
