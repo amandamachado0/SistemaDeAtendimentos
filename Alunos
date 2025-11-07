@@ -1,0 +1,144 @@
+#include <stdio.h>   // Biblioteca padrão de entrada e saída
+#include <string.h>  // Biblioteca para manipulação de strings
+#include <ctype.h>   // Biblioteca para funções de manipulação de caracteres (toupper, tolower, etc.)
+
+#define ALUNOS 30    // Define o número máximo de alunos
+#define QUESTOES 20  // Define o número de questões da prova
+
+// Estrutura que representa um aluno
+typedef struct {
+    char nome[40];          // Nome do aluno (máximo 39 caracteres + '\0')
+    char respostas[QUESTOES]; // Respostas do aluno
+    int acertos;            // Número de acertos do aluno
+} Aluno;
+
+Aluno alunos[ALUNOS];  // Array global de alunos
+
+// Função para ler respostas de uma prova
+void lerRespostas(char respostass[]) {
+    char linha[10]; // String auxiliar para ler a entrada do usuário
+    for (int i = 0; i < QUESTOES; i++) { // Loop por todas as questões
+        char resposta;
+        do {
+            printf("Questão %d (A/B/C/D/E): ", i + 1); // Solicita a resposta da questão
+            if (fgets(linha, sizeof(linha), stdin)) {   // Lê a linha do usuário
+                resposta = toupper(linha[0]);           // Converte a resposta para maiúscula
+            } else {
+                resposta = ' '; // Se der erro, define como caractere inválido
+            }
+
+            // Validação da resposta (apenas A, B, C, D ou E)
+            if (resposta < 'A' || resposta > 'E')
+                printf("Resposta inválida! Tente novamente.\n");
+        } while (resposta < 'A' || resposta > 'E'); // Continua até o usuário digitar corretamente
+        respostass[i] = resposta; // Armazena a resposta no array do aluno
+    }
+}
+
+// Função para cadastrar alunos
+void cadastrarAlunos(Aluno alunos[], int *numAlunos) {
+    char linha[100]; // String auxiliar para ler o nome
+    for (int i = 0; i < ALUNOS; i++) {
+        printf("\nAluno %d\n", i + 1); // Mostra qual aluno está sendo cadastrado
+        printf("Nome:");
+        if (fgets(linha, sizeof(linha), stdin)) { // Lê o nome do aluno
+            linha[strcspn(linha, "\n")] = 0;      // Remove o '\n' que o fgets adiciona
+            strcpy(alunos[i].nome, linha);        // Copia o nome para a struct
+        }
+        lerRespostas(alunos[i].respostas); // Lê as respostas do aluno
+        alunos[i].acertos = 0;              // Inicializa os acertos como 0
+    }
+    *numAlunos = ALUNOS; // Atualiza a quantidade de alunos cadastrados
+}
+
+// Função para ler o gabarito
+void lerGabarito(char gabarito[]) {
+    printf("\nGabarito\n");
+    char linha[10]; // String auxiliar para leitura
+    for (int i = 0; i < QUESTOES; ) { // Loop pelas questões
+        printf("Questao %d:", i + 1);
+        if (fgets(linha, sizeof(linha), stdin)) { // Lê a resposta
+            char resposta = toupper(linha[0]);    // Converte para maiúscula
+            if (resposta >= 'A' && resposta <= 'E') { // Valida se é A-E
+                gabarito[i] = resposta;          // Armazena no gabarito
+                i++;                             // Passa para a próxima questão
+            } else {
+                printf("Resposta inválida! Digite A, B, C, D ou E.\n");
+            }
+        }
+    }
+}
+
+// Função para corrigir as provas
+void corrigirProvas(Aluno alunos[], int numAlunos, char gabarito[]) {
+    for (int i = 0; i < numAlunos; i++) { // Para cada aluno
+        int acertos = 0;
+        for (int j = 0; j < QUESTOES; j++) { // Para cada questão
+            if (alunos[i].respostas[j] == gabarito[j]) // Se a resposta estiver correta
+                acertos++; // Incrementa os acertos
+        }
+        alunos[i].acertos = acertos; // Armazena o total de acertos
+    }
+}
+
+// Função para mostrar os melhores alunos
+void melhoresAlunos(Aluno alunos[], int numAlunos) {
+    int maior = 0;
+    for (int i = 0; i < numAlunos; i++) { // Encontra o maior número de acertos
+        if (alunos[i].acertos > maior)
+            maior = alunos[i].acertos;
+    }
+
+    printf("\nOS MELHORES\n");
+    for (int i = 0; i < numAlunos; i++) { // Imprime os alunos com mais acertos
+        if (alunos[i].acertos == maior)
+            printf("%s com %d acertos!! Parabens!!\n", alunos[i].nome, alunos[i].acertos);
+    }
+}
+
+// Função para imprimir relatório completo
+void imprimirRelatorio(Aluno alunos[], int numAlunos) {
+    printf("\nRELATORIO\n");
+    for (int i = 0; i < numAlunos; i++) {
+        printf("%s - Acertos: %d\n", alunos[i].nome, alunos[i].acertos);
+    }
+}
+
+// Função principal
+int main() {
+    char gabarito[QUESTOES]; // Array para armazenar o gabarito
+    int numAlunos = 0;       // Contador de alunos cadastrados
+    int opcao;               // Opção do menu
+
+    do {
+        // Menu principal
+        printf("1. Cadastrar alunos\n");
+        printf("2. Ler gabarito\n");
+        printf("3. Corrigir provas\n");
+        printf("4. Imprimir relatorio\n");
+        printf("5. Mostrar melhores alunos\n");
+        printf("0. Sair\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);        // Lê a opção
+        while(getchar() != '\n');   // Limpa o buffer do teclado
+
+        // Execução da opção escolhida
+        if (opcao == 1) {
+            cadastrarAlunos(alunos, &numAlunos);
+        } else if (opcao == 2) {
+            lerGabarito(gabarito);
+        } else if (opcao == 3) {
+            corrigirProvas(alunos, numAlunos, gabarito);
+        } else if (opcao == 4) {
+            imprimirRelatorio(alunos, numAlunos);
+        } else if (opcao == 5) {
+            melhoresAlunos(alunos, numAlunos);
+        } else if (opcao == 0) {
+            printf("Saindo...\n");
+        } else {
+            printf("Opcao invalida!\n");
+        }
+    } while (opcao != 0); // Continua até escolher sair
+
+    return 0;
+}
